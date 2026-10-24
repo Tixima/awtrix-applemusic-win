@@ -1,0 +1,122 @@
+# @name    iTunes Now Playing
+# @desc    The song playing in Apple Music / iTunes on your Mac: album artwork, title, artist and progress. Needs itunes-helper.py running on the Mac: github.com/mojeska/awtrix-itunes
+# @author  Jeff Rainey
+# @version 1.1
+# @display 52x16
+# @config  host    text   "Mac address"     default="" group="Connection" help="IP or name of the Mac running the helper, from github.com/mojeska/awtrix-itunes"
+# @config  port    number "Helper port"     default=8765 min=1 max=65535 group="Connection"
+# @config  key     text   "Helper key"      default="" group="Connection" help="Only if you started the helper with --key"
+# @config  every   number "Check every"     default=3 min=1 max=60 unit=s group="Connection"
+# @config  paused  select "When paused"     default=hide options=hide,show group="Display" help="hide skips the app while nothing plays"
+# @config  art     bool   "Album artwork"   default=true group="Display"
+# @config  bar     bool   "Progress bar"    default=true group="Display"
+# @config  jump    bool   "Show new songs at once" default=false group="Display" help="Jump to this app when a new song starts"
+# @config  tcolor  color  "Title colour"    default=#FFFFFF group="Colours"
+# @config  acolor  color  "Artist colour"   default=#FFB030 group="Colours"
+# @config  bcolor  color  "Progress colour" default=#FFFFFF group="Colours"
+# @config  speed   slider "Scroll speed"    default=90 min=30 max=150 step=5 unit=% group="Display" help="100% is the clock's normal speed"
+
+import json
+
+class ITunes
+  var base, qs, every, ticks, in_flight, fails
+  var state, title, artist, art_url, pos, dur, at_ms, song
+  var show_paused, show_art, show_bar, jump, tcolor, acolor, bcolor, tscroll, ascroll
+
+  def init()
+    var host = store.get("host")
+    var port = int(store.get("port"))
+    self.base = host == "" ? nil : "http://" + host + ":" + str(port)
+    self.qs = store.get("key") == "" ? "" : "?k=" + store.get("key")
+    self.every = int(store.get("every"))
+    self.ticks = 0
+    self.in_flight = false
+    self.fails = 0
+    self.state = "off"
+    self.title = ""
+    self.artist = ""
+    self.art_url = nil
+    self.pos = 0
+    self.dur = 0
+    self.at_ms = 0
+    self.song = ""
+    self.show_paused = store.get("paused") == "show"
+    self.show_art = store.get("art")
+    self.show_bar = store.get("bar")
+    self.jump = store.get("jump")
+    self.tcolor = store.get("tcolor")
+    self.acolor = store.get("acolor")
+    self.bcolor = store.get("bcolor")
+    var sp = int(store.get("speed"))
+    self.tscroll = {"repeat": 1, "speed": sp}
+    self.ascroll = {"speed": sp}
+  end
+
+  def loop()
+    if self.base == nil || self.in_flight return end
+    self.ticks -= 1
+    if self.ticks > 0 return end
+    self.ticks = self.every
+    self.in_flight = true
+    http.get(self.base + "/now" + self.qs, / b, st -> self.on_now(b, st), {"cap": 2048})
+  end
+
+  def on_now(body, status)
+    self.in_flight = false
+    if body == nil || status != 200
+      self.fails += 1
+      if self.fails >= 3 self.state = "off" end   # Mac asleep or helper stopped: drop out
+      return
+    end
+    self.fails = 0
+    var d = json.load(body)
+    if !isinstance(d, map) return end
+    self.state = d.find("s", "off")
+    if self.state != "playing" && self.state != "paused" return end
+    var song = str(d.find("t", "")) + "\n" + str(d.find("a", ""))
+    if song != self.song
+      self.song = song
+      self.title = d.find("t", "")
+      self.artist = d.find("a", "")
+      var art = d.find("art")
+      self.art_url = art == nil ? nil : self.base + art + self.qs
+      if self.jump && self.state == "playing" rotation.show() end
+    end
+    self.pos = real(d.find("p", 0))
+    self.dur = real(d.find("d", 0))
+    self.at_ms = now_ms()
+  end
+
+  def should_show()
+    if self.base == nil return true end            # explain the missing setting
+    return self.state == "playing" || (self.show_paused && self.state == "paused")
+  end
+
+  def draw()
+    clear()
+    if self.base == nil
+      text(0, 6, "Set Mac", 0xFFB030)
+      text(0, 14, "address", 0xFFB030)
+      return
+    end
+    var playing = self.state == "playing"
+    var x = 0
+    if self.show_art
+      if self.art_url == nil || !icon(self.art_url, 0, 0)
+        rect_fill(0, 0, 16, 16, 0x202020)       # until the artwork has arrived
+      end
+      x = 18
+    end
+    var w = width() - x
+    scroll_text(x, 6, w, self.title, playing ? self.tcolor : 0x707070, self.tscroll)
+    scroll_text(x, 13, w, self.artist, playing ? self.acolor : 0x505050, self.ascroll)
+    if self.show_bar && self.dur > 0
+      var p = self.pos
+      if playing p += (now_ms() - self.at_ms) / 1000.0 end
+      var pct = int(p * 100 / self.dur)
+      progress(pct > 100 ? 100 : pct, playing ? self.bcolor : 0x505050, 0x202020, x)
+    end
+  end
+end
+
+return ITunes()
