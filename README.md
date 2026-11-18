@@ -102,7 +102,7 @@ an die gewünschte Stelle gezogen wird. Solange die Adresse fehlt, zeigt die Uhr
 | Albumcover | an | wie im Original |
 | Fortschritt | an | Balken in der unteren Zeile, wie im Original |
 | Neue Titel sofort | aus | springt zur App, wenn ein anderer Titel beginnt |
-| Titel auf zwei Zeilen | aus | an: der Titel bricht auf beide Zeilen um und bleibt stehen, ohne Lauftext. Passt er in eine Zeile, steht der Interpret darunter |
+| Titel auf zwei Zeilen | aus | an: der Titel bricht an ganzen Wörtern um und bleibt stehen, ohne Lauftext. Ein Wort, das nicht in die Zeile passt, wird an der Silbe getrennt. Passt der Titel in eine Zeile, steht der Interpret darunter |
 | Überblenden | an | neues Lied wird erst dunkel, dann hell |
 | Aufbau | original | `original` ist Titel oben und Interpret darunter, wie im Mac-Skript. `ruhig`, `beide`, `gross` und `breit` bleiben als weitere Aufbauten |
 | Text | wechsel | nur beim Aufbau `ruhig` |

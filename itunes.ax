@@ -1,7 +1,7 @@
 # @name    Apple Music
-# @desc    Wie das Original: Cover, Titel, Interpret, Fortschritt. Optional bricht der Titel auf beide Zeilen um. Ein neues Lied blendet über. itunes-helper.py muss laufen.
+# @desc    Wie das Original: Cover, Titel, Interpret, Fortschritt. Optional bricht der Titel an Wörtern auf beide Zeilen um. Ein neues Lied blendet über. itunes-helper.py muss laufen.
 # @author  Jeff Rainey, Niktix
-# @version 2.2
+# @version 2.3
 # @display 52x16
 # @config  host     text   "PC-Adresse"        default="" group="Verbindung" help="IP oder Name des Windows-PCs, auf dem der Helper läuft"
 # @config  port     number "Port"              default=8765 min=1 max=65535 group="Verbindung"
@@ -11,7 +11,7 @@
 # @config  art      bool   "Albumcover"        default=true group="Anzeige"
 # @config  bar      bool   "Fortschritt"       default=true group="Anzeige"
 # @config  jump     bool   "Neue Titel sofort" default=false group="Anzeige" help="Springt zu dieser App, wenn ein neuer Titel beginnt"
-# @config  zeilen   bool   "Titel auf zwei Zeilen" default=false group="Anzeige" help="Bricht den Titel auf beide Zeilen um und lässt ihn stehen, ohne Lauftext"
+# @config  zeilen   bool   "Titel auf zwei Zeilen" default=false group="Anzeige" help="Bricht den Titel an ganzen Wörtern um und lässt ihn stehen. Ein zu langes Wort wird an der Silbe getrennt"
 # @config  ueber    bool   "Überblenden"       default=true group="Anzeige" help="Das neue Lied wird dunkel und dann hell, statt hart umzuschalten"
 # @config  bild     select "Aufbau"            default=original options=original,ruhig,beide,gross,breit group="Anzeige" help="original ist Titel oben und Interpret darunter, wie im Mac-Skript. ruhig wechselt eine Zeile. beide zeigt beide Zeilen. gross schreibt den Titel groß. breit nutzt die ganze Breite"
 # @config  textart  select "Text"              default=wechsel options=titel,interpret,wechsel group="Anzeige" help="Nur beim Aufbau ruhig"
@@ -329,6 +329,360 @@ class ITunes
     text(x0, y, s, col)
   end
 
+  # Ein Zeichen, auch wenn es mehrere Bytes hat. So bleibt „ä“ ganz.
+  def utf8_len_at(s, i)
+    var c = s[i .. i]
+    if c >= "\xF0" return 4 end
+    if c >= "\xE0" return 3 end
+    if c >= "\xC0" return 2 end
+    return 1
+  end
+
+  def chars_of(s)
+    var out = []
+    var i = 0
+    var n = size(s)
+    while i < n
+      var len = self.utf8_len_at(s, i)
+      if i + len > n len = 1 end
+      var endi = i + len - 1
+      out.push(s[i .. endi])
+      i += len
+    end
+    return out
+  end
+
+  def join_chars(cs, a, b)
+    var s = ""
+    var i = a
+    while i < b
+      s += cs[i]
+      i += 1
+    end
+    return s
+  end
+
+  def fold(ch)
+    if size(ch) != 1
+      if ch == "Ä" return "ä" end
+      if ch == "Ö" return "ö" end
+      if ch == "Ü" return "ü" end
+      if ch == "ẞ" return "ß" end
+      return ch
+    end
+    var U = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    var L = "abcdefghijklmnopqrstuvwxyz"
+    var i = 0
+    while i < 26
+      if ch == U[i .. i] return L[i .. i] end
+      i += 1
+    end
+    return ch
+  end
+
+  def listed(key, table)
+    var needle = " " + key + " "
+    var n = size(table)
+    var m = size(needle)
+    if m == 0 || m > n return false end
+    var last = n - m
+    var i = 0
+    while i <= last
+      var endi = i + m - 1
+      if table[i .. endi] == needle return true end
+      i += 1
+    end
+    return false
+  end
+
+  def is_vowel(ch)
+    var c = self.fold(ch)
+    if size(c) != 1
+      return c == "ä" || c == "ö" || c == "ü" || c == "á" || c == "é" || c == "í" || c == "ó" || c == "ú" || c == "à" || c == "è" || c == "ì" || c == "ò" || c == "ù" || c == "â" || c == "ê" || c == "î" || c == "ô" || c == "û"
+    end
+    return c == "a" || c == "e" || c == "i" || c == "o" || c == "u"
+  end
+
+  def is_diphthong(a, b)
+    return self.listed(self.fold(a) + self.fold(b), " ai au ay ea ee ei eu ey ia ie ii io oa oe oi oo ou oy ui aa äu ")
+  end
+
+  def is_word_char(ch)
+    if self.is_vowel(ch) return true end
+    if ch == "y" || ch == "Y" || ch == "'" || ch == "’" || ch == "ß" || ch == "ẞ" return true end
+    if size(ch) != 1 return false end
+    var c = self.fold(ch)
+    if c >= "a" && c <= "z" return true end
+    if c >= "0" && c <= "9" return true end
+    return false
+  end
+
+  def is_space_ch(ch)
+    return ch == " " || ch == "\t"
+  end
+
+  def is_hyphen_ch(ch)
+    return ch == "-" || ch == "–" || ch == "—" || ch == "/"
+  end
+
+  def has_german_mark(cs)
+    var i = 0
+    var n = size(cs)
+    while i < n
+      var ch = cs[i]
+      if ch == "ä" || ch == "ö" || ch == "ü" || ch == "Ä" || ch == "Ö" || ch == "Ü" || ch == "ß" || ch == "ẞ"
+        return true
+      end
+      i += 1
+    end
+    return false
+  end
+
+  def same_ch(a, b)
+    return self.fold(a) == self.fold(b)
+  end
+
+  def cluster_key(cs, a, b)
+    var s = ""
+    var i = a
+    while i < b
+      s += self.fold(cs[i])
+      i += 1
+    end
+    return s
+  end
+
+  def is_liquid(key)
+    if size(key) != 2 return false end
+    var b = key[1 .. 1]
+    if b != "l" && b != "r" return false end
+    var a = key[0 .. 0]
+    return a == "b" || a == "c" || a == "d" || a == "f" || a == "g" || a == "k" || a == "p" || a == "t" || a == "v"
+  end
+
+  def is_digraph(key)
+    return self.listed(key, " ch sh th ph ck wh sch pf ")
+  end
+
+  def is_onset(key)
+    return self.listed(key, " ch sh th ph ck wh sch pf bl br cl cr dr fl fr gl gr kl kr pl pr tr vl vr st sp sk sl sm sn sw str spr scr schr thr ")
+  end
+
+  # Schnitt vor der nächsten Silbe. c0 ist der erste Mitlaut, c1 der folgende Vokal.
+  def onset_cut(cs, c0, c1)
+    var clen = c1 - c0
+    if clen <= 1 return c0 end
+    if self.same_ch(cs[c0], cs[c0 + 1])
+      if clen >= 3 && self.same_ch(cs[c0], cs[c0 + 2]) return c0 + 2 end
+      return c0 + 1
+    end
+    var whole = self.cluster_key(cs, c0, c1)
+    if self.is_liquid(whole) || self.is_digraph(whole) return c0 end
+    var best = c0 + 1
+    var length = clen - 1
+    while length >= 1
+      var key = self.cluster_key(cs, c1 - length, c1)
+      if length == 1 || self.is_onset(key) || self.is_liquid(key) || self.is_digraph(key)
+        best = c1 - length
+        break
+      end
+      length -= 1
+    end
+    return best
+  end
+
+  def silent_e(cs, vowel)
+    var n = size(cs)
+    if n < 4 || self.has_german_mark(cs) return end
+    if self.fold(cs[n - 1]) != "e" || !vowel[n - 1] return end
+    if self.fold(cs[n - 2]) == "l" && !vowel[n - 2] return end
+    var k = n - 2
+    var cons = 0
+    while k >= 0 && !vowel[k]
+      cons += 1
+      k -= 1
+    end
+    if cons == 1 && k >= 0 vowel[n - 1] = false end
+  end
+
+  def vowel_flags(cs)
+    var vowel = []
+    var n = size(cs)
+    var i = 0
+    while i < n
+      var ch = cs[i]
+      var v = self.is_vowel(ch)
+      if ch == "y" || ch == "Y" v = i > 0 end
+      vowel.push(v)
+      i += 1
+    end
+    self.silent_e(cs, vowel)
+    return vowel
+  end
+
+  def vowel_starts(cs, vowel)
+    var starts = []
+    var n = size(cs)
+    var i = 0
+    var in_g = false
+    var prev = 0
+    while i < n
+      if vowel[i]
+        if !in_g
+          starts.push(i)
+          in_g = true
+        elif !self.is_diphthong(cs[prev], cs[i])
+          starts.push(i)
+        end
+        prev = i
+      else
+        in_g = false
+      end
+      i += 1
+    end
+    return starts
+  end
+
+  def cut_ok(cut, n, vowel)
+    if cut <= 0 || cut >= n return false end
+    if n - cut < 2 return false end
+    if cut >= 2 return true end
+    return vowel[0]
+  end
+
+  def syllables(word)
+    var cs = self.chars_of(word)
+    var n = size(cs)
+    if n <= 4 return [word] end
+    var vowel = self.vowel_flags(cs)
+    var starts = self.vowel_starts(cs, vowel)
+    if size(starts) <= 1 return [word] end
+    var cuts = []
+    var g = 1
+    var gs = size(starts)
+    while g < gs
+      var p = starts[g] - 1
+      while p >= 0 && !vowel[p] p -= 1 end
+      var c0 = p + 1
+      var c1 = starts[g]
+      var cut = c1
+      if c1 > c0 cut = self.onset_cut(cs, c0, c1) end
+      if self.cut_ok(cut, n, vowel) cuts.push(cut) end
+      g += 1
+    end
+    if size(cuts) == 0 return [word] end
+    var pieces = []
+    var prev = 0
+    var ci = 0
+    var cn = size(cuts)
+    while ci < cn
+      var c = cuts[ci]
+      if c > prev
+        pieces.push(self.join_chars(cs, prev, c))
+        prev = c
+      end
+      ci += 1
+    end
+    if prev < n pieces.push(self.join_chars(cs, prev, n)) end
+    if size(pieces) == 0 return [word] end
+    return pieces
+  end
+
+  def segments(title, w)
+    var cs = self.chars_of(title)
+    var n = size(cs)
+    var segs = []
+    var i = 0
+    while i < n
+      var ch = cs[i]
+      if self.is_space_ch(ch)
+        var j = i + 1
+        while j < n && self.is_space_ch(cs[j]) j += 1 end
+        segs.push({"t": self.join_chars(cs, i, j), "br": false, "hy": false})
+        i = j
+      elif self.is_hyphen_ch(ch)
+        segs.push({"t": ch, "br": true, "hy": false})
+        i += 1
+      elif self.is_word_char(ch)
+        var j = i + 1
+        while j < n && self.is_word_char(cs[j]) j += 1 end
+        var word = self.join_chars(cs, i, j)
+        var pieces = [word]
+        if text_ink_width(word) > w pieces = self.syllables(word) end
+        if size(pieces) == 0 pieces = [word] end
+        var p = 0
+        var pn = size(pieces)
+        while p < pn
+          var last = p == pn - 1
+          var hy = !last && pn > 1
+          var br = true
+          if last && j < n && self.is_hyphen_ch(cs[j]) br = false end
+          segs.push({"t": pieces[p], "br": br, "hy": hy})
+          p += 1
+        end
+        i = j
+      else
+        segs.push({"t": ch, "br": true, "hy": false})
+        i += 1
+      end
+    end
+    return segs
+  end
+
+  def side_text(segs, cut, hyphen)
+    var s = ""
+    var i = 0
+    while i < cut
+      s += segs[i]["t"]
+      i += 1
+    end
+    if hyphen && s != ""
+      var m = size(s)
+      if s[m - 1 .. m - 1] != "-" s += "-" end
+    end
+    return s
+  end
+
+  def right_text(segs, cut)
+    var s = ""
+    var i = cut
+    var n = size(segs)
+    while i < n
+      s += segs[i]["t"]
+      i += 1
+    end
+    var k = 0
+    var m = size(s)
+    while k < m
+      var ch = s[k .. k]
+      if ch != " " && ch != "\t" break end
+      k += 1
+    end
+    if k == 0 return s end
+    if k >= m return "" end
+    return s[k .. m - 1]
+  end
+
+  def hard_cut(title, w)
+    var cs = self.chars_of(title)
+    var n = size(cs)
+    var best = 1
+    var i = 1
+    while i < n
+      var left = self.join_chars(cs, 0, i) + "-"
+      if text_ink_width(left) <= w best = i end
+      i += 1
+    end
+    if best >= n
+      self.line1 = title
+      self.line2 = ""
+      return
+    end
+    self.line1 = self.join_chars(cs, 0, best) + "-"
+    self.line2 = self.join_chars(cs, best, n)
+  end
+
+  # Ganze Wörter auf die erste Zeile. Nur ein Wort, das allein nicht passt, wird an der Silbe getrennt.
   def fit_lines(title, w)
     self.wrapped_for = title
     self.wrapped_w = w
@@ -342,41 +696,37 @@ class ITunes
       self.line2 = ""
       return
     end
-    var n = size(title)
-    var cut = -1
+    var segs = self.segments(title, w)
+    var n = size(segs)
+    var best = -1
+    var best_score = -1
     var i = 0
     while i < n
-      if title[i] == 32 && i > 0
-        var left_end = i - 1
-        if text_ink_width(title[0 .. left_end]) <= w cut = i end
+      var seg = segs[i]
+      if seg["br"]
+        var left = self.side_text(segs, i + 1, seg["hy"])
+        var right = self.right_text(segs, i + 1)
+        if right != "" && text_ink_width(left) <= w
+          var both = text_ink_width(right) <= w
+          var rank = 1
+          if both && seg["hy"] rank = 2 end
+          if both && !seg["hy"] rank = 3 end
+          var score = rank * 1000 + text_ink_width(left)
+          if score >= best_score
+            best_score = score
+            best = i
+          end
+        end
       end
       i += 1
     end
-    if cut < 0
-      var lo = 1
-      var hi = n - 1
-      var fit = 1
-      while lo <= hi
-        var mid = (lo + hi) / 2
-        var mid_end = mid - 1
-        if text_ink_width(title[0 .. mid_end]) <= w
-          fit = mid
-          lo = mid + 1
-        else
-          hi = mid - 1
-        end
-      end
-      var fit_end = fit - 1
-      var last = n - 1
-      self.line1 = title[0 .. fit_end]
-      self.line2 = fit >= n ? "" : title[fit .. last]
+    if best >= 0
+      var seg = segs[best]
+      self.line1 = self.side_text(segs, best + 1, seg["hy"])
+      self.line2 = self.right_text(segs, best + 1)
       return
     end
-    var cut_end = cut - 1
-    var rest_at = cut + 1
-    var last = n - 1
-    self.line1 = title[0 .. cut_end]
-    self.line2 = rest_at >= n ? "" : title[rest_at .. last]
+    self.hard_cut(title, w)
   end
 
   def draw()

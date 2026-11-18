@@ -19,6 +19,10 @@ def test_original_und_die_zusaetzlichen_optionen():
     assert "self.wrap" in source
     assert "def fade_level()" in source
     assert "def fit_lines(" in source
+    assert "def syllables(" in source
+    assert "def segments(" in source
+    assert 'ch == " "' in source
+    assert "title[i] == 32" not in source
     assert "def paint_eq(" in source
     assert "rect_fill(0, 10, 8, 6" not in source
-    assert "@version 2.2" in source
+    assert "@version 2.3" in source
