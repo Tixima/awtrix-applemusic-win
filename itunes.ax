@@ -1,20 +1,20 @@
-# @name    iTunes Now Playing
-# @desc    The song playing in Apple Music / iTunes on your Mac: album artwork, title, artist and progress. Needs itunes-helper.py running on the Mac: github.com/mojeska/awtrix-itunes
+# @name    Apple Music
+# @desc    Titel aus Apple Music oder iTunes auf diesem Windows-PC: Cover, Titel, Interpret, Fortschritt. itunes-helper.py muss auf dem PC laufen.
 # @author  Jeff Rainey
-# @version 1.1
+# @version 1.0
 # @display 52x16
-# @config  host    text   "Mac address"     default="" group="Connection" help="IP or name of the Mac running the helper, from github.com/mojeska/awtrix-itunes"
-# @config  port    number "Helper port"     default=8765 min=1 max=65535 group="Connection"
-# @config  key     text   "Helper key"      default="" group="Connection" help="Only if you started the helper with --key"
-# @config  every   number "Check every"     default=3 min=1 max=60 unit=s group="Connection"
-# @config  paused  select "When paused"     default=hide options=hide,show group="Display" help="hide skips the app while nothing plays"
-# @config  art     bool   "Album artwork"   default=true group="Display"
-# @config  bar     bool   "Progress bar"    default=true group="Display"
-# @config  jump    bool   "Show new songs at once" default=false group="Display" help="Jump to this app when a new song starts"
-# @config  tcolor  color  "Title colour"    default=#FFFFFF group="Colours"
-# @config  acolor  color  "Artist colour"   default=#FFB030 group="Colours"
-# @config  bcolor  color  "Progress colour" default=#FFFFFF group="Colours"
-# @config  speed   slider "Scroll speed"    default=90 min=30 max=150 step=5 unit=% group="Display" help="100% is the clock's normal speed"
+# @config  host    text   "PC-Adresse"      default="" group="Verbindung" help="IP oder Name des Windows-PCs, auf dem der Helper läuft"
+# @config  port    number "Port"            default=8765 min=1 max=65535 group="Verbindung"
+# @config  key     text   "Schlüssel"       default="" group="Verbindung" help="Nur wenn der Helper mit --key gestartet wurde"
+# @config  every   number "Intervall"       default=3 min=1 max=60 unit=s group="Verbindung"
+# @config  paused  select "Bei Pause"       default=ausblenden options=ausblenden,anzeigen group="Anzeige" help="ausblenden nimmt die App aus der Rotation, solange nichts spielt"
+# @config  art     bool   "Albumcover"      default=true group="Anzeige"
+# @config  bar     bool   "Fortschritt"     default=true group="Anzeige"
+# @config  jump    bool   "Neue Titel sofort" default=false group="Anzeige" help="Springt zu dieser App, wenn ein neuer Titel beginnt"
+# @config  tcolor  color  "Titelfarbe"      default=#FFFFFF group="Farben"
+# @config  acolor  color  "Interpretfarbe"  default=#FFB030 group="Farben"
+# @config  bcolor  color  "Balkenfarbe"     default=#FFFFFF group="Farben"
+# @config  speed   slider "Lauftext"        default=90 min=30 max=150 step=5 unit=% group="Anzeige" help="100 ist die normale Geschwindigkeit der Uhr"
 
 import json
 
@@ -40,7 +40,7 @@ class ITunes
     self.dur = 0
     self.at_ms = 0
     self.song = ""
-    self.show_paused = store.get("paused") == "show"
+    self.show_paused = store.get("paused") == "anzeigen"
     self.show_art = store.get("art")
     self.show_bar = store.get("bar")
     self.jump = store.get("jump")
@@ -65,7 +65,7 @@ class ITunes
     self.in_flight = false
     if body == nil || status != 200
       self.fails += 1
-      if self.fails >= 3 self.state = "off" end   # Mac asleep or helper stopped: drop out
+      if self.fails >= 3 self.state = "off" end
       return
     end
     self.fails = 0
@@ -88,22 +88,22 @@ class ITunes
   end
 
   def should_show()
-    if self.base == nil return true end            # explain the missing setting
+    if self.base == nil return true end
     return self.state == "playing" || (self.show_paused && self.state == "paused")
   end
 
   def draw()
     clear()
     if self.base == nil
-      text(0, 6, "Set Mac", 0xFFB030)
-      text(0, 14, "address", 0xFFB030)
+      text(0, 6, "Adresse", 0xFFB030)
+      text(0, 14, "eintragen", 0xFFB030)
       return
     end
     var playing = self.state == "playing"
     var x = 0
     if self.show_art
       if self.art_url == nil || !icon(self.art_url, 0, 0)
-        rect_fill(0, 0, 16, 16, 0x202020)       # until the artwork has arrived
+        rect_fill(0, 0, 16, 16, 0x202020)
       end
       x = 18
     end
