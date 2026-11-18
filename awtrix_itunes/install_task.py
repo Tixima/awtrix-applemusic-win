@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import xml.etree.ElementTree as ET
@@ -40,7 +41,16 @@ def _exe_name(executable: str) -> str:
     return executable.replace("\\", "/").rsplit("/", 1)[-1].lower()
 
 
-def build_task_xml(*, executable: str, script: str, config: str, workdir: str) -> str:
+def current_user_id() -> str:
+    """Konto für den Anmelde-Trigger. Ohne Konto verlangt Windows Administratorrechte."""
+    user = os.environ.get("USERNAME", "").strip()
+    domain = os.environ.get("USERDOMAIN", "").strip()
+    if domain and user:
+        return f"{domain}\\{user}"
+    return user
+
+
+def build_task_xml(*, executable: str, script: str, config: str, workdir: str, user_id: str = "") -> str:
     """Aufgabenplanung: bei Anmeldung starten, im Benutzerkonto, bei Fehler neu."""
     task = ET.Element("Task", {"version": "1.2", "xmlns": TASK_XMLNS})
     info = ET.SubElement(task, "RegistrationInfo")
@@ -50,9 +60,13 @@ def build_task_xml(*, executable: str, script: str, config: str, workdir: str) -
     triggers = ET.SubElement(task, "Triggers")
     trigger = ET.SubElement(triggers, "LogonTrigger")
     ET.SubElement(trigger, "Enabled").text = "true"
+    if user_id:
+        ET.SubElement(trigger, "UserId").text = user_id
 
     principals = ET.SubElement(task, "Principals")
     principal = ET.SubElement(principals, "Principal", {"id": "Author"})
+    if user_id:
+        ET.SubElement(principal, "UserId").text = user_id
     ET.SubElement(principal, "LogonType").text = "InteractiveToken"
     ET.SubElement(principal, "RunLevel").text = "LeastPrivilege"
 
@@ -91,6 +105,7 @@ def install(
     executable: str,
     base_dir: Path,
     runner=subprocess.run,
+    user_id: str | None = None,
 ) -> Path:
     """Kopiert den Helper und trägt die Anmeldungsaufgabe ein."""
     package = source_root / "awtrix_itunes"
@@ -112,28 +127,48 @@ def install(
         encoding="utf-8",
     )
     chosen = windowless_python(executable)
+    account = current_user_id() if user_id is None else user_id
     xml = build_task_xml(
         executable=chosen,
         script=str(dest / "itunes-helper.py"),
         config=str(config_path),
         workdir=str(dest),
+        user_id=account,
     )
     xml_path = dest / "task.xml"
     xml_path.write_text(xml, encoding="utf-16")
 
-    runner(["schtasks", "/End", "/TN", TASK_NAME], check=False)
-    runner(["schtasks", "/Delete", "/TN", TASK_NAME, "/F"], check=False)
-    runner(["schtasks", "/Create", "/TN", TASK_NAME, "/XML", str(xml_path), "/F"], check=True)
-    runner(["schtasks", "/Run", "/TN", TASK_NAME], check=True)
+    _schtasks(runner, ["schtasks", "/End", "/TN", TASK_NAME], check=False)
+    _schtasks(runner, ["schtasks", "/Delete", "/TN", TASK_NAME, "/F"], check=False)
+    _schtasks(runner, ["schtasks", "/Create", "/TN", TASK_NAME, "/XML", str(xml_path), "/F"], check=True)
+    _schtasks(runner, ["schtasks", "/Run", "/TN", TASK_NAME], check=True)
     return dest
 
 
 def uninstall(*, base_dir: Path, runner=subprocess.run) -> None:
-    runner(["schtasks", "/End", "/TN", TASK_NAME], check=False)
-    runner(["schtasks", "/Delete", "/TN", TASK_NAME, "/F"], check=False)
+    _schtasks(runner, ["schtasks", "/End", "/TN", TASK_NAME], check=False)
+    _schtasks(runner, ["schtasks", "/Delete", "/TN", TASK_NAME, "/F"], check=False)
     dest = base_dir / FOLDER_NAME
     if dest.exists():
         shutil.rmtree(dest)
+
+
+def _schtasks(runner, args: list[str], *, check: bool) -> None:
+    """Aufgabenplanung aufrufen. Ein fehlender Eintrag beim Beenden ist kein Fehler."""
+    kwargs = {"check": check}
+    if runner is subprocess.run:
+        kwargs["capture_output"] = True
+        kwargs["text"] = True
+    try:
+        runner(args, **kwargs)
+    except subprocess.CalledProcessError as exc:
+        detail = (exc.stderr or exc.stdout or "").strip()
+        lowered = detail.casefold()
+        hint = ""
+        if "zugriff verweigert" in lowered or "access is denied" in lowered:
+            hint = " Rechtsklick auf install.bat und „Als Administrator ausführen“."
+        suffix = f" {detail}" if detail else ""
+        raise SystemExit(f"Die Aufgabenplanung hat den Eintrag nicht angenommen.{suffix}{hint}") from exc
 
 
 def _quote(value: str) -> str:

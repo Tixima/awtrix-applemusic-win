@@ -1,6 +1,7 @@
 """Aufgabenplanung, ohne Windows aufzurufen."""
 
 import json
+import subprocess
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -26,6 +27,19 @@ def test_xml_ist_gueltig_und_enthaelt_keinen_schluessel():
     ET.fromstring(xml.split("?>", 1)[1])
     assert "<LogonTrigger>" in xml
     assert "InteractiveToken" in xml
+    assert "<UserId>" not in xml
+    owned = build_task_xml(
+        executable=r"C:\Python\pythonw.exe",
+        script=r"C:\App\itunes-helper.py",
+        config=r"C:\App\config.json",
+        workdir=r"C:\App",
+        user_id=r"PC\nikla",
+    )
+    trigger = owned.split("<LogonTrigger>", 1)[1].split("</LogonTrigger>", 1)[0]
+    principal = owned.split("<Principal", 1)[1].split("</Principal>", 1)[0]
+    assert "<UserId>PC\\nikla</UserId>" in trigger
+    assert trigger.index("<Enabled>") < trigger.index("<UserId>")
+    assert principal.index("<UserId>") < principal.index("<LogonType>")
     assert "<RestartOnFailure>" in xml
     assert "PT0S" in xml
     assert "PT1M" in xml
@@ -65,12 +79,14 @@ def test_install_kopiert_und_legt_den_schluessel_nur_in_die_config(tmp_path):
         executable=str(exe),
         base_dir=tmp_path / "local",
         runner=runner,
+        user_id=r"PC\nikla",
     )
     assert (dest / "itunes-helper.py").is_file()
     assert (dest / "awtrix_itunes" / "cli.py").is_file()
     config = json.loads((dest / "config.json").read_text(encoding="utf-8"))
     assert config == {"port": 9123, "key": "a&b"}
     xml = (dest / "task.xml").read_text(encoding="utf-16")
+    assert "<UserId>PC\\nikla</UserId>" in xml
     assert "a&b" not in xml
     assert "9123" not in xml
     assert str(dest / "config.json") in xml
@@ -81,3 +97,27 @@ def test_install_kopiert_und_legt_den_schluessel_nur_in_die_config(tmp_path):
 
     uninstall(base_dir=tmp_path / "local", runner=runner)
     assert not dest.exists()
+
+
+def test_zugriff_verweigert_wird_verstaendlich(tmp_path):
+    def runner(cmd, check=False):
+        if "/Create" in cmd:
+            raise subprocess.CalledProcessError(1, cmd, stderr="FEHLER: Zugriff verweigert\r\n")
+        return None
+
+    exe = tmp_path / "python.exe"
+    exe.write_bytes(b"")
+    try:
+        install(
+            source_root=ROOT,
+            port=8765,
+            key="",
+            executable=str(exe),
+            base_dir=tmp_path / "local",
+            runner=runner,
+            user_id=r"PC\nikla",
+        )
+    except SystemExit as exc:
+        assert "Als Administrator ausführen" in str(exc)
+    else:
+        raise AssertionError("erwartet SystemExit")

@@ -142,6 +142,7 @@ in die Adresse setzt.
 | Auf dem PC geht die Seite, von der Uhr nicht | Firewall: beim ersten Start den Zugriff zugelassen? Sonst die Eingabeaufforderung als Administrator und `netsh advfirewall firewall add rule name="AWTRIX Apple Music" dir=in action=allow protocol=TCP localport=8765` |
 | `/now` sagt immer `"off"` | Zeigt die Lautstärke-Ansicht von Windows den Titel? Wenn nicht, sieht auch der Helper ihn nicht. Apple Music muss laufen und etwas abspielen. Im Protokoll `helper.log` steht, welche Sitzungen Windows meldet. |
 | „Adresse / eintragen“ | PC-Adresse in den Einstellungen der App eintragen |
+| „Datei nicht gefunden“ und danach „Zugriff verweigert“ | Die ersten beiden Zeilen heißen nur: die Aufgabe gab es noch nicht. „Zugriff verweigert“ heißt, Windows will den Eintrag nicht ohne Administrator. Rechtsklick auf `install.bat`, **Als Administrator ausführen**. Danach muss „Eingerichtet“ stehen. |
 | Graues Quadrat statt Cover | Die Uhr lädt das Bild noch. Bleibt es grau, ins Protokoll schauen. |
 | Interpret heißt „Name - Album“ | Apple Music liefert die Felder manchmal so. Der Helper trennt das, wenn das Album hinten steht. |
 
