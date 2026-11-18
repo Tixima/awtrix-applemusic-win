@@ -88,7 +88,8 @@ curl -X PUT http://<uhr-ip>/api/v1/apps/script/itunes \
 Danach unter **Apps** das Zahnrad bei **Apple Music**, die PC-Adresse eintragen und
 speichern. Ein neues Skript erscheint in der Rotation erst, wenn es auf der Apps-Seite
 an die gewünschte Stelle gezogen wird. Solange die Adresse fehlt, zeigt die Uhr
-„Adresse / eintragen“.
+eine ruhige Note und „Adresse / fehlt“. Ist der PC nicht erreichbar, bleibt
+dieselbe Note stehen und meldet „Offline / kein PC“.
 
 ## Einstellungen auf der Uhr
 
@@ -152,7 +153,8 @@ in die Adresse setzt.
 | Die App kommt nie | Läuft ein Titel? `http://<pc-ip>:8765/now` von einem anderen Gerät muss `"playing"` sagen. Liegt die App in der Rotation? |
 | Auf dem PC geht die Seite, von der Uhr nicht | Firewall: beim ersten Start den Zugriff zugelassen? Sonst die Eingabeaufforderung als Administrator und `netsh advfirewall firewall add rule name="AWTRIX Apple Music" dir=in action=allow protocol=TCP localport=8765` |
 | `/now` sagt immer `"off"` | Zeigt die Lautstärke-Ansicht von Windows den Titel? Wenn nicht, sieht auch der Helper ihn nicht. Apple Music muss laufen und etwas abspielen. Im Protokoll `helper.log` steht, welche Sitzungen Windows meldet. |
-| „Adresse / eintragen“ | PC-Adresse in den Einstellungen der App eintragen |
+| Note und „Adresse / fehlt“ | PC-Adresse in den Einstellungen der App eintragen |
+| Note und „Offline / kein PC“ | Der Helper auf dem PC läuft nicht, oder die Adresse stimmt nicht. Im Browser `http://<pc-ip>:8765/now` öffnen |
 | „Datei nicht gefunden“ und danach „Zugriff verweigert“ | Die ersten beiden Zeilen heißen nur: die Aufgabe gab es noch nicht. „Zugriff verweigert“ heißt, Windows will den Eintrag nicht ohne Administrator. Rechtsklick auf `install.bat`, **Als Administrator ausführen**. Danach muss „Eingerichtet“ stehen. |
 | Graues Quadrat statt Cover | Die Uhr lädt das Bild noch. Bleibt es grau, ins Protokoll schauen. |
 | Interpret heißt „Name - Album“ | Apple Music liefert die Felder manchmal so. Der Helper trennt das, wenn das Album hinten steht. |

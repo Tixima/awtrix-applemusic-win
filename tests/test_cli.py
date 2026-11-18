@@ -58,5 +58,7 @@ def test_uhr_skript_passt_zum_protokoll():
     assert 'options=ausblenden,anzeigen' in text
     assert 'store.get("paused") == "anzeigen"' in text
     assert 'http.get(self.base + "/now"' in text
-    assert 'text(0, 6, "Adresse"' in text
+    assert "def draw_standby(" in text
+    assert '"Adresse"' in text
+    assert '"fehlt"' in text
     assert "Set Mac" not in text

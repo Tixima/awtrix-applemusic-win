@@ -1,7 +1,7 @@
 # @name    Apple Music
 # @desc    Wie das Original: Cover, Titel, Interpret, Fortschritt. Optional bricht der Titel an Wörtern auf beide Zeilen um. Ein neues Lied blendet über. itunes-helper.py muss laufen.
 # @author  Jeff Rainey, Niktix
-# @version 2.3
+# @version 2.4
 # @display 52x16
 # @config  host     text   "PC-Adresse"        default="" group="Verbindung" help="IP oder Name des Windows-PCs, auf dem der Helper läuft"
 # @config  port     number "Port"              default=8765 min=1 max=65535 group="Verbindung"
@@ -39,12 +39,13 @@ class ITunes
   var pend_title, pend_artist, pend_art, pending
   var phase, phase_at, visible
   var done_t, done_a, chip_sec, chip_s
-  var line1, line2, wrapped_for, wrapped_w
+  var line1, line2, wrapped_for, wrapped_w, link
 
   def init()
     var host = store.get("host")
     var port = self.num("port", 8765)
     self.base = host == "" ? nil : "http://" + host + ":" + str(port)
+    self.link = self.base == nil ? 0 : 1
     self.qs = store.get("key") == "" ? "" : "?k=" + store.get("key")
     self.every = self.num("every", 3)
     self.ticks = 0
@@ -142,10 +143,11 @@ class ITunes
     self.in_flight = false
     if body == nil || status != 200
       self.fails += 1
-      if self.fails >= 3 self.state = "off" end
+      if self.fails >= 3 self.link = 1 end
       return
     end
     self.fails = 0
+    self.link = 2
     var d = json.load(body)
     if !isinstance(d, map) return end
     self.state = d.find("s", "off")
@@ -204,7 +206,7 @@ class ITunes
   end
 
   def should_show()
-    if self.base == nil return true end
+    if self.link != 2 return true end
     return self.state == "playing" || (self.show_paused && self.state == "paused")
   end
 
@@ -729,11 +731,53 @@ class ITunes
     self.hard_cut(title, w)
   end
 
+  # 0..70 hoch und wieder runter, daraus eine Helligkeit zwischen lo und hi.
+  def glow(asleep)
+    var pace = asleep ? 55 : 32
+    var t = int(now_ms() / pace) % 140
+    if t > 70 t = 140 - t end
+    var lo = asleep ? 24 : 46
+    var hi = asleep ? 58 : 100
+    return lo + t * (hi - lo) / 70
+  end
+
+  def idle_line(x, y, w, s, col)
+    var ink = text_ink_width(s)
+    var x0 = x
+    if ink < w x0 = x + (w - ink) / 2 end
+    text(x0, y, s, col)
+  end
+
+  # Achtelnote, fest gezeichnet, damit der Kopf rund bleibt.
+  def paint_note(col)
+    rect_fill(4, 8, 3, 1, col)
+    rect_fill(3, 9, 5, 1, col)
+    rect_fill(3, 10, 5, 1, col)
+    rect_fill(3, 11, 5, 1, col)
+    rect_fill(4, 12, 3, 1, col)
+    rect_fill(8, 1, 2, 9, col)
+    rect_fill(10, 1, 4, 2, col)
+    rect_fill(12, 3, 2, 1, col)
+    rect_fill(13, 4, 1, 1, col)
+  end
+
+  def draw_standby(missing)
+    font("small")
+    var asleep = !missing
+    var note = missing ? 0xFFB030 : 0x7D8B96
+    var ink = missing ? 0xFFFFFF : 0xD5DDE4
+    var sub = missing ? 0xFFB030 : 0x8A97A3
+    var line = missing ? 0xFFB030 : 0x5C6B78
+    self.paint_note(self.shade(note, self.glow(asleep)))
+    self.idle_line(18, 6, 34, missing ? "Adresse" : "Offline", ink)
+    self.idle_line(18, 13, 34, missing ? "fehlt" : "kein PC", sub)
+    rect_fill(18, 15, 34, 1, self.shade(line, 32))
+  end
+
   def draw()
     clear()
-    if self.base == nil
-      text(0, 6, "Adresse", 0xFFB030)
-      text(0, 14, "eintragen", 0xFFB030)
+    if self.link != 2
+      self.draw_standby(self.link == 0)
       return
     end
     var level = self.fade_level()

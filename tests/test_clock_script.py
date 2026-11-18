@@ -24,5 +24,10 @@ def test_original_und_die_zusaetzlichen_optionen():
     assert 'ch == " "' in source
     assert "title[i] == 32" not in source
     assert "def paint_eq(" in source
+    assert "def draw_standby(" in source
+    assert "def paint_note(" in source
+    assert "self.link" in source
+    assert '"Adresse"' in source
+    assert '"kein PC"' in source
     assert "rect_fill(0, 10, 8, 6" not in source
-    assert "@version 2.3" in source
+    assert "@version 2.4" in source
