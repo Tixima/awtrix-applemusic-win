@@ -1,38 +1,45 @@
 # @name    Apple Music
-# @desc    Ruhige Now-Playing-Karte: Cover, eine Zeile, Zeit und Fortschritt. Zu langer Text läuft höchstens einmal, nie zwei Zeilen zugleich. itunes-helper.py muss laufen.
+# @desc    Wie das Original: Cover, Titel, Interpret, Fortschritt. Optional bricht der Titel auf beide Zeilen um. Ein neues Lied blendet über. itunes-helper.py muss laufen.
 # @author  Jeff Rainey, Niktix
-# @version 2.0
+# @version 2.2
 # @display 52x16
-# @config  host    text   "PC-Adresse"        default="" group="Verbindung" help="IP oder Name des Windows-PCs, auf dem der Helper läuft"
-# @config  port    number "Port"              default=8765 min=1 max=65535 group="Verbindung"
-# @config  key     text   "Schlüssel"         default="" group="Verbindung" help="Nur wenn der Helper mit --key gestartet wurde"
-# @config  every   number "Intervall"         default=3 min=1 max=60 unit=s group="Verbindung"
-# @config  look    select "Aufbau"            default=ruhig options=ruhig,beide,gross,breit group="Anzeige" help="ruhig: Cover und eine Zeile. beide: Titel und Interpret, nur eine Zeile wandert. gross: großer Titel. breit: Titel über die ganze Breite"
-# @config  textart select "Text"              default=wechsel options=titel,interpret,wechsel group="Anzeige" help="Nur im Aufbau ruhig: was auf der einen Zeile steht"
-# @config  art     bool   "Albumcover"        default=true group="Anzeige"
-# @config  eq      bool   "Pegel"             default=true group="Anzeige" help="Kleine Balken unten auf dem Cover, solange etwas spielt"
-# @config  bar     bool   "Fortschritt"       default=true group="Anzeige"
-# @config  zeit    select "Zeit"              default=rest options=aus,rest,lauf group="Anzeige" help="rest ist die verbleibende Zeit, lauf die schon gespielte. Sie steht nur, wenn der Titel daneben noch Platz hat"
-# @config  paused  select "Bei Pause"         default=ausblenden options=ausblenden,anzeigen group="Anzeige" help="ausblenden nimmt die App aus der Rotation, solange nichts spielt"
-# @config  jump    bool   "Neue Titel sofort" default=false group="Anzeige" help="Springt zu dieser App, wenn ein neuer Titel beginnt"
-# @config  lauf    select "Lauftext"          default=einmal options=stehen,einmal,hinher,dauernd group="Text" help="einmal läuft zu langen Text ein Mal und bleibt dann stehen. stehen schneidet ab. hinher wandert hin und her. dauernd läuft, solange der Text nicht passt"
-# @config  hold    slider "Stillstehen"       default=1800 min=0 max=6000 step=200 unit=ms group="Text" help="Ruhe, bevor ein zu langer Text losläuft"
-# @config  speed   slider "Tempo"             default=55 min=30 max=120 step=5 unit=% group="Text" help="100 ist die normale Geschwindigkeit der Uhr"
-# @config  flip    number "Wechsel alle"      default=8 min=3 max=30 unit=s group="Text" help="Sekunden, bis Titel und Interpret bei wechsel tauschen"
-# @config  tcolor  color  "Titelfarbe"        default=#FFFFFF group="Farben"
-# @config  acolor  color  "Interpretfarbe"    default=#FFB030 group="Farben"
-# @config  bcolor  color  "Balkenfarbe"       default=#FFFFFF group="Farben"
-# @config  ecolor  color  "Pegelfarbe"        default=#3DDC97 group="Farben"
+# @config  host     text   "PC-Adresse"        default="" group="Verbindung" help="IP oder Name des Windows-PCs, auf dem der Helper läuft"
+# @config  port     number "Port"              default=8765 min=1 max=65535 group="Verbindung"
+# @config  key      text   "Schlüssel"         default="" group="Verbindung" help="Nur wenn der Helper mit --key gestartet wurde"
+# @config  every    number "Intervall"         default=3 min=1 max=60 unit=s group="Verbindung"
+# @config  paused   select "Bei Pause"         default=ausblenden options=ausblenden,anzeigen group="Anzeige" help="ausblenden nimmt die App aus der Rotation, solange nichts spielt"
+# @config  art      bool   "Albumcover"        default=true group="Anzeige"
+# @config  bar      bool   "Fortschritt"       default=true group="Anzeige"
+# @config  jump     bool   "Neue Titel sofort" default=false group="Anzeige" help="Springt zu dieser App, wenn ein neuer Titel beginnt"
+# @config  zeilen   bool   "Titel auf zwei Zeilen" default=false group="Anzeige" help="Bricht den Titel auf beide Zeilen um und lässt ihn stehen, ohne Lauftext"
+# @config  ueber    bool   "Überblenden"       default=true group="Anzeige" help="Das neue Lied wird dunkel und dann hell, statt hart umzuschalten"
+# @config  bild     select "Aufbau"            default=original options=original,ruhig,beide,gross,breit group="Anzeige" help="original ist Titel oben und Interpret darunter, wie im Mac-Skript. ruhig wechselt eine Zeile. beide zeigt beide Zeilen. gross schreibt den Titel groß. breit nutzt die ganze Breite"
+# @config  textart  select "Text"              default=wechsel options=titel,interpret,wechsel group="Anzeige" help="Nur beim Aufbau ruhig"
+# @config  pegel    bool   "Pegel"             default=false group="Anzeige" help="Drei kleine Balken unten auf dem Cover, direkt auf dem Bild, solange etwas spielt"
+# @config  uhrzeit  select "Zeit"              default=aus options=aus,rest,lauf group="Anzeige" help="Steht nur im Aufbau ruhig oder breit, und nur wenn der Titel daneben noch Platz hat"
+# @config  textlauf select "Lauftext"          default=original options=original,stehen,einmal,hinher,dauernd group="Text" help="original: der Titel läuft einmal durch, der Interpret folgt der Uhr. stehen schneidet ab. einmal läuft ein Mal. hinher wandert hin und her. dauernd läuft, solange der Text nicht passt. Bei Titel auf zwei Zeilen ohne Wirkung"
+# @config  hold     slider "Stillstehen"       default=1800 min=0 max=6000 step=200 unit=ms group="Text" help="Ruhe, bevor ein zu langer Text bei einmal oder hinher losläuft"
+# @config  tempo    slider "Tempo"             default=90 min=30 max=150 step=5 unit=% group="Text" help="100 ist die normale Geschwindigkeit der Uhr. 90 ist die Vorgabe des Originals"
+# @config  flip     number "Wechsel alle"      default=8 min=3 max=30 unit=s group="Text" help="Sekunden, bis Titel und Interpret beim Aufbau ruhig tauschen"
+# @config  tcolor   color  "Titelfarbe"        default=#FFFFFF group="Farben"
+# @config  acolor   color  "Interpretfarbe"    default=#FFB030 group="Farben"
+# @config  bcolor   color  "Balkenfarbe"       default=#FFFFFF group="Farben"
+# @config  ecolor   color  "Pegelfarbe"        default=#3DDC97 group="Farben"
 
 import json
 
 class ITunes
   var base, qs, every, ticks, in_flight, fails
   var state, title, artist, art_url, pos, dur, at_ms, song
-  var show_paused, show_art, show_bar, show_eq, jump, look, textart, zeit, flip
-  var tcolor, acolor, bcolor, ecolor, move
+  var show_paused, show_art, show_bar, show_eq, jump, wrap, do_fade
+  var bild, textart, zeit, move, flip
+  var tcolor, acolor, bcolor, ecolor, tscroll, ascroll
   var opt_still, opt_once, opt_bounce, opt_loop
+  var cur_title, cur_artist, cur_art, cur_pos, cur_dur, cur_at, cur_state
+  var pend_title, pend_artist, pend_art, pending
+  var phase, phase_at, visible
   var done_t, done_a, chip_sec, chip_s
+  var line1, line2, wrapped_for, wrapped_w
 
   def init()
     var host = store.get("host")
@@ -54,39 +61,72 @@ class ITunes
     self.show_paused = store.get("paused") == "anzeigen"
     self.show_art = store.get("art")
     self.show_bar = store.get("bar")
-    var eq = store.get("eq")
-    self.show_eq = eq == nil ? true : eq
+    var pegel = store.get("pegel")
+    self.show_eq = pegel == nil ? false : pegel
     self.jump = store.get("jump")
-    self.look = store.get("look")
-    if self.look == nil self.look = "ruhig" end
+    self.wrap = store.get("zeilen")
+    var fade = store.get("ueber")
+    self.do_fade = fade == nil ? true : fade
+    self.bild = store.get("bild")
+    if self.bild == nil self.bild = "original" end
     self.textart = store.get("textart")
     if self.textart == nil self.textart = "wechsel" end
-    self.zeit = store.get("zeit")
-    if self.zeit == nil self.zeit = "rest" end
+    self.zeit = store.get("uhrzeit")
+    if self.zeit == nil self.zeit = "aus" end
+    self.move = store.get("textlauf")
+    if self.move == nil self.move = "original" end
     self.flip = self.num("flip", 8)
     if self.flip < 3 self.flip = 3 end
     self.tcolor = store.get("tcolor")
     self.acolor = store.get("acolor")
     self.bcolor = store.get("bcolor")
     self.ecolor = store.get("ecolor")
-    self.move = store.get("lauf")
-    if self.move == nil self.move = "einmal" end
-    var speed = self.num("speed", 55)
-    var hold = self.num("hold", 1800)
+    var sp = self.num("tempo", 90)
+    var pause = self.num("hold", 1800)
+    self.tscroll = {"repeat": 1, "speed": sp}
+    self.ascroll = {"speed": sp}
     self.opt_still = {"mode": "static", "whenFits": "static", "repeat": 0}
-    self.opt_once = {"mode": "wrap", "whenFits": "static", "entry": "inline", "direction": "left", "speed": speed, "holdMs": hold, "repeat": 1}
-    self.opt_bounce = {"mode": "bounce", "whenFits": "static", "entry": "inline", "direction": "left", "speed": speed, "holdMs": hold, "repeat": 0}
-    self.opt_loop = {"mode": "loop", "whenFits": "static", "entry": "inline", "direction": "left", "speed": speed, "holdMs": 0, "gap": 12, "repeat": 0}
+    self.opt_once = {"mode": "wrap", "whenFits": "static", "entry": "inline", "direction": "left", "speed": sp, "holdMs": pause, "repeat": 1}
+    self.opt_bounce = {"mode": "bounce", "whenFits": "static", "entry": "inline", "direction": "left", "speed": sp, "holdMs": pause, "repeat": 0}
+    self.opt_loop = {"mode": "loop", "whenFits": "static", "entry": "inline", "direction": "left", "speed": sp, "holdMs": 0, "gap": 12, "repeat": 0}
+    self.cur_title = nil
+    self.cur_artist = ""
+    self.cur_art = nil
+    self.cur_pos = 0
+    self.cur_dur = 0
+    self.cur_at = 0
+    self.cur_state = "off"
+    self.pend_title = ""
+    self.pend_artist = ""
+    self.pend_art = nil
+    self.pending = false
+    self.phase = 0
+    self.phase_at = 0
+    self.visible = false
     self.done_t = false
     self.done_a = false
     self.chip_sec = -1
     self.chip_s = ""
+    self.line1 = ""
+    self.line2 = ""
+    self.wrapped_for = nil
+    self.wrapped_w = -1
   end
 
   def num(key, fallback)
     var v = store.get(key)
     if v == nil return fallback end
     return int(v)
+  end
+
+  def on_show()
+    self.visible = true
+  end
+
+  def on_hide()
+    self.visible = false
+    self.phase = 0
+    self.pending = false
   end
 
   def loop()
@@ -111,7 +151,8 @@ class ITunes
     self.state = d.find("s", "off")
     if self.state != "playing" && self.state != "paused" return end
     var song = str(d.find("t", "")) + "\n" + str(d.find("a", ""))
-    if song != self.song
+    var changed = song != self.song
+    if changed
       self.song = song
       self.title = d.find("t", "")
       self.artist = d.find("a", "")
@@ -125,6 +166,41 @@ class ITunes
     self.pos = real(d.find("p", 0))
     self.dur = real(d.find("d", 0))
     self.at_ms = now_ms()
+    if !changed && self.cur_title != nil
+      self.cur_art = self.art_url
+      if self.phase == 0
+        self.cur_pos = self.pos
+        self.cur_dur = self.dur
+        self.cur_at = self.at_ms
+        self.cur_state = self.state
+      end
+      return
+    end
+    if self.cur_title == nil || !self.do_fade || !self.visible
+      self.show_live()
+      return
+    end
+    self.pend_title = self.title
+    self.pend_artist = self.artist
+    self.pend_art = self.art_url
+    self.pending = true
+    if self.phase == 0
+      self.phase = 1
+      self.phase_at = now_ms()
+    end
+  end
+
+  def show_live()
+    self.cur_title = self.title
+    self.cur_artist = self.artist
+    self.cur_art = self.art_url
+    self.cur_pos = self.pos
+    self.cur_dur = self.dur
+    self.cur_at = self.at_ms
+    self.cur_state = self.state
+    self.pending = false
+    self.phase = 0
+    self.wrapped_for = nil
   end
 
   def should_show()
@@ -132,34 +208,73 @@ class ITunes
     return self.state == "playing" || (self.show_paused && self.state == "paused")
   end
 
+  def fade_level()
+    if !self.do_fade || self.phase == 0 return 100 end
+    var half = 400
+    var age = now_ms() - self.phase_at
+    if age < 0 age = 0 end
+    if self.phase == 1
+      if age >= half
+        self.cur_title = self.pend_title
+        self.cur_artist = self.pend_artist
+        self.cur_art = self.pend_art
+        self.cur_pos = self.pos
+        self.cur_dur = self.dur
+        self.cur_at = self.at_ms
+        self.cur_state = self.state
+        self.pending = false
+        self.phase = 2
+        self.phase_at = now_ms()
+        self.wrapped_for = nil
+        self.done_t = false
+        self.done_a = false
+        return 0
+      end
+      return 100 - age * 100 / half
+    end
+    if age >= half
+      self.phase = 0
+      return 100
+    end
+    return age * 100 / half
+  end
+
+  def shade(color, pct)
+    if pct >= 100 return color end
+    if pct <= 0 || color == nil return 0 end
+    var r = ((color >> 16) & 255) * pct / 100
+    var g = ((color >> 8) & 255) * pct / 100
+    var b = (color & 255) * pct / 100
+    return (r << 16) + (g << 8) + b
+  end
+
   def title_line()
-    if self.title == "" return "—" end
-    return self.title
+    if self.cur_title == nil || self.cur_title == "" return "—" end
+    return self.cur_title
   end
 
   def shown()
     var title = self.title_line()
-    if self.textart == "titel" || self.artist == "" return title end
-    if self.textart == "interpret" return self.artist end
+    if self.textart == "titel" || self.cur_artist == "" return title end
+    if self.textart == "interpret" return self.cur_artist end
     var slot = int(now_ms() / 1000) / self.flip
     if slot % 2 == 0 return title end
-    return self.artist
+    return self.cur_artist
   end
 
   def elapsed()
-    var p = self.pos
-    if self.state == "playing" p += (now_ms() - self.at_ms) / 1000.0 end
+    var p = self.cur_pos
+    if self.cur_state == "playing" && self.phase != 1 p += (now_ms() - self.cur_at) / 1000.0 end
     if p < 0 p = 0 end
-    if self.dur > 0 && p > self.dur p = self.dur end
+    if self.cur_dur > 0 && p > self.cur_dur p = self.cur_dur end
     return p
   end
 
-  # Einmal pro Sekunde, nicht in jedem Bild.
   def chip()
-    if self.zeit == "aus" || self.dur <= 0 return "" end
+    if self.zeit == "aus" || self.cur_dur <= 0 return "" end
     var sec = int(self.elapsed())
     if self.zeit == "rest"
-      sec = int(self.dur) - sec
+      sec = int(self.cur_dur) - sec
       if sec < 0 sec = 0 end
     end
     if sec != self.chip_sec
@@ -186,7 +301,12 @@ class ITunes
     end
   end
 
-  def place(x, y, w, line, col)
+  def moving(x, y, w, line, col, primary)
+    if line == "" return end
+    if self.move == "original"
+      scroll_text(x, y, w, line, col, primary ? self.tscroll : self.ascroll)
+      return
+    end
     var too_long = text_ink_width(line) > w
     var once = self.move == "einmal" && too_long && !self.finished(line)
     var opt = self.opt_still
@@ -201,11 +321,62 @@ class ITunes
     if once && n != nil && n >= 1 self.mark(line) end
   end
 
-  def still(x, y, w, line, col)
-    var ink = text_ink_width(line)
+  def still(x, y, w, s, col)
+    if s == "" return end
+    var ink = text_ink_width(s)
     var x0 = x
     if ink < w x0 = x + (w - ink) / 2 end
-    text(x0, y, line, col)
+    text(x0, y, s, col)
+  end
+
+  def fit_lines(title, w)
+    self.wrapped_for = title
+    self.wrapped_w = w
+    if title == ""
+      self.line1 = "—"
+      self.line2 = ""
+      return
+    end
+    if text_ink_width(title) <= w
+      self.line1 = title
+      self.line2 = ""
+      return
+    end
+    var n = size(title)
+    var cut = -1
+    var i = 0
+    while i < n
+      if title[i] == 32 && i > 0
+        var left_end = i - 1
+        if text_ink_width(title[0 .. left_end]) <= w cut = i end
+      end
+      i += 1
+    end
+    if cut < 0
+      var lo = 1
+      var hi = n - 1
+      var fit = 1
+      while lo <= hi
+        var mid = (lo + hi) / 2
+        var mid_end = mid - 1
+        if text_ink_width(title[0 .. mid_end]) <= w
+          fit = mid
+          lo = mid + 1
+        else
+          hi = mid - 1
+        end
+      end
+      var fit_end = fit - 1
+      var last = n - 1
+      self.line1 = title[0 .. fit_end]
+      self.line2 = fit >= n ? "" : title[fit .. last]
+      return
+    end
+    var cut_end = cut - 1
+    var rest_at = cut + 1
+    var last = n - 1
+    self.line1 = title[0 .. cut_end]
+    self.line2 = rest_at >= n ? "" : title[rest_at .. last]
   end
 
   def draw()
@@ -215,30 +386,55 @@ class ITunes
       text(0, 14, "eintragen", 0xFFB030)
       return
     end
-    var playing = self.state == "playing"
-    var tc = playing ? self.tcolor : 0x707070
-    var ac = playing ? self.acolor : 0x505050
+    var level = self.fade_level()
+    var playing = self.cur_state == "playing"
+    var tc = self.shade(playing ? self.tcolor : 0x707070, level)
+    var ac = self.shade(playing ? self.acolor : 0x505050, level)
     font("small")
-    if self.look == "gross"
-      self.draw_big(tc, playing)
+    if !self.wrap && self.bild == "gross"
+      self.draw_big(tc, playing, level)
       return
     end
-    if self.look == "breit"
-      self.draw_card(0, tc, ac, playing)
-      return
+    var x = 0
+    if self.wrap || (self.bild != "breit")
+      x = self.paint_cover(level)
+      self.paint_eq(playing, level)
     end
-    var x = self.paint_cover()
-    self.paint_eq(playing)
-    if self.look == "beide"
-      self.draw_pair(x, tc, ac, playing)
+    if self.wrap
+      self.draw_wrap(x, tc, ac, playing, level)
+    elif self.bild == "ruhig" || self.bild == "breit"
+      self.draw_card(x, tc, ac, playing, level)
+    elif self.bild == "beide"
+      self.draw_pair(x, tc, ac, playing, level)
     else
-      self.draw_card(x, tc, ac, playing)
+      self.draw_original(x, tc, ac, playing, level)
     end
   end
 
-  def draw_card(x, tc, ac, playing)
+  def draw_original(x, tc, ac, playing, level)
+    var w = width() - x
+    var title = self.cur_title == nil ? "" : self.cur_title
+    self.moving(x, 6, w, title, tc, true)
+    self.moving(x, 13, w, self.cur_artist, ac, false)
+    self.paint_bar(x, playing, level)
+  end
+
+  def draw_wrap(x, tc, ac, playing, level)
+    var w = width() - x
+    var title = self.cur_title == nil ? "" : self.cur_title
+    if title != self.wrapped_for || w != self.wrapped_w self.fit_lines(title, w) end
+    self.still(x, 6, w, self.line1, tc)
+    if self.line2 != ""
+      self.still(x, 13, w, self.line2, tc)
+    elif self.cur_artist != ""
+      self.still(x, 13, w, self.cur_artist, ac)
+    end
+    self.paint_bar(x, playing, level)
+  end
+
+  def draw_card(x, tc, ac, playing, level)
     var line = self.shown()
-    var col = line == self.artist && self.artist != "" ? ac : tc
+    var col = line == self.cur_artist && self.cur_artist != "" ? ac : tc
     var full = width() - x
     var chip = self.chip()
     var gap = 0
@@ -249,54 +445,52 @@ class ITunes
         text(width() - (cw - 2), 8, chip, ac)
       end
     end
-    self.place(x, 8, full - gap, line, col)
-    self.paint_bar(x, playing)
+    self.moving(x, 8, full - gap, line, col, true)
+    self.paint_bar(x, playing, level)
   end
 
-  def draw_pair(x, tc, ac, playing)
+  def draw_pair(x, tc, ac, playing, level)
     var title = self.title_line()
     var w = width() - x
-    var title_long = text_ink_width(title) > w
-    var artist_long = self.artist != "" && text_ink_width(self.artist) > w
-    if artist_long && !title_long
-      self.still(x, 6, w, title, tc)
-      self.place(x, 13, w, self.artist, ac)
+    if self.move == "original"
+      self.moving(x, 6, w, title, tc, true)
+      self.moving(x, 13, w, self.cur_artist, ac, false)
     else
-      if title_long
-        self.place(x, 6, w, title, tc)
-      else
+      var title_long = text_ink_width(title) > w
+      var artist_long = self.cur_artist != "" && text_ink_width(self.cur_artist) > w
+      if artist_long && !title_long
         self.still(x, 6, w, title, tc)
+        self.moving(x, 13, w, self.cur_artist, ac, false)
+      else
+        if title_long
+          self.moving(x, 6, w, title, tc, true)
+        else
+          self.still(x, 6, w, title, tc)
+        end
+        if self.cur_artist != "" self.still(x, 13, w, self.cur_artist, ac) end
       end
-      if self.artist != "" self.still(x, 13, w, self.artist, ac) end
     end
-    self.paint_bar(x, playing)
+    self.paint_bar(x, playing, level)
   end
 
-  def draw_big(tc, playing)
+  def draw_big(tc, playing, level)
     font("large")
-    self.place(0, 7, width(), self.title_line(), tc)
-    self.paint_bar(0, playing)
+    self.moving(0, 7, width(), self.title_line(), tc, true)
+    self.paint_bar(0, playing, level)
   end
 
-  def paint_cover()
+  def paint_cover(level)
     if !self.show_art return 0 end
-    if self.art_url == nil || !icon(self.art_url, 0, 0)
-      self.note(0, 0)
+    if self.cur_art == nil || !icon(self.cur_art, 0, 0)
+      rect_fill(0, 0, 16, 16, self.shade(0x202020, level))
     end
     return 18
   end
 
-  def note(x, y)
-    rect_fill(x, y, 16, 16, 0x202020)
-    rect_fill(x + 8, y + 3, 1, 8, 0xFFB030)
-    rect_fill(x + 9, y + 3, 4, 1, 0xFFB030)
-    circle_fill(x + 6, y + 12, 2, 0xFFB030)
-  end
-
-  def paint_eq(playing)
+  # Balken direkt auf dem Cover, ohne dunkle Fläche dahinter.
+  def paint_eq(playing, level)
     if !self.show_eq || !self.show_art return end
-    rect_fill(0, 10, 8, 6, 0x101010)
-    var col = playing ? self.ecolor : 0x404040
+    var col = self.shade(playing ? self.ecolor : 0x404040, level)
     var t = int(now_ms() / 180)
     for i : 0 .. 2
       var h = 2
@@ -305,11 +499,11 @@ class ITunes
     end
   end
 
-  def paint_bar(x, playing)
-    if !self.show_bar || self.dur <= 0 return end
-    var pct = int(self.elapsed() * 100 / self.dur)
+  def paint_bar(x, playing, level)
+    if !self.show_bar || self.cur_dur <= 0 return end
+    var pct = int(self.elapsed() * 100 / self.cur_dur)
     if pct < 0 pct = 0 end
-    progress(pct > 100 ? 100 : pct, playing ? self.bcolor : 0x505050, 0x181818, x)
+    progress(pct > 100 ? 100 : pct, self.shade(playing ? self.bcolor : 0x505050, level), self.shade(0x202020, level), x)
   end
 end
 

@@ -1,21 +1,24 @@
-"""Das Uhr-Skript bleibt ruhig: kurzer Text steht, und höchstens eine Zeile wandert."""
+"""Vorgaben wie im Original. Umbruch, Überblenden und die übrigen Schalter bleiben."""
 
 from pathlib import Path
 
 SCRIPT = Path(__file__).resolve().parents[1] / "itunes.ax"
 
 
-def test_lauftext_steht_wenn_er_passt_und_ignoriert_die_uhr_vorgabe():
+def test_original_und_die_zusaetzlichen_optionen():
     source = SCRIPT.read_text(encoding="utf-8")
-    assert '"whenFits": "static"' in source
-    assert '"mode": "static"' in source
-    assert '"mode": "bounce"' in source
-    assert 'self.move == "einmal"' in source
-    assert 'self.move == "dauernd"' in source
-    assert 'self.move == "hinher"' in source
-    assert "options=stehen,einmal,hinher,dauernd" in source
-    assert "default=einmal" in source
-    assert "options=ruhig,beide,gross,breit" in source
-    assert "default=ruhig" in source
-    assert "@version 2.0" in source
-    assert "scroll_text" in source
+    assert '{"repeat": 1, "speed": sp}' in source
+    assert '{"speed": sp}' in source
+    assert "default=90" in source
+    assert "default=original" in source
+    assert 'bool   "Titel auf zwei Zeilen" default=false' in source
+    assert 'bool   "Überblenden"       default=true' in source
+    assert 'bool   "Pegel"             default=false' in source
+    assert "options=original,ruhig,beide,gross,breit" in source
+    assert "options=original,stehen,einmal,hinher,dauernd" in source
+    assert "self.wrap" in source
+    assert "def fade_level()" in source
+    assert "def fit_lines(" in source
+    assert "def paint_eq(" in source
+    assert "rect_fill(0, 10, 8, 6" not in source
+    assert "@version 2.2" in source

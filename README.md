@@ -98,19 +98,23 @@ an die gewünschte Stelle gezogen wird. Solange die Adresse fehlt, zeigt die Uhr
 | Port | 8765 | derselbe Wert wie `--port` |
 | Schlüssel | leer | derselbe Wert wie `--key` |
 | Intervall | 3 s | wie oft die Uhr nachfragt |
-| Bei Pause | ausblenden | `anzeigen` lässt die App stehen, grau |
-| Aufbau | ruhig | `ruhig` zeigt Cover und eine Zeile. `beide` zeigt Titel und Interpret, aber nur eine Zeile darf wandern. `gross` schreibt den Titel groß. `breit` nutzt die ganze Breite, ohne Cover |
-| Text | wechsel | nur bei `ruhig`: Titel, Interpret, oder sie lösen sich ab |
-| Albumcover | an | aus gibt dem Text die ganze Breite |
-| Pegel | an | drei kleine Balken unten auf dem Cover, solange etwas spielt |
-| Fortschritt | an | Balken in der unteren Zeile |
-| Zeit | rest | `rest` ist die verbleibende Zeit, `lauf` die schon gespielte. Sie erscheint nur, wenn der Titel daneben noch Platz hat |
+| Bei Pause | ausblenden | `anzeigen` lässt die App stehen, grau. Wie im Original |
+| Albumcover | an | wie im Original |
+| Fortschritt | an | Balken in der unteren Zeile, wie im Original |
 | Neue Titel sofort | aus | springt zur App, wenn ein anderer Titel beginnt |
-| Lauftext | einmal | `stehen` schneidet ab. `einmal` läuft zu langen Text ein Mal und bleibt dann stehen. `hinher` wandert hin und her. `dauernd` läuft, solange der Text nicht passt. Nie zwei Zeilen gleichzeitig |
-| Stillstehen | 1800 ms | Ruhe, bevor ein zu langer Text losläuft |
-| Tempo | 55 % | 100 % ist die normale Geschwindigkeit der Uhr |
-| Wechsel alle | 8 s | Abstand, in dem Titel und Interpret sich bei `wechsel` ablösen |
-| Titelfarbe / Interpretfarbe / Balkenfarbe / Pegelfarbe | weiß / amber / weiß / grün | |
+| Titel auf zwei Zeilen | aus | an: der Titel bricht auf beide Zeilen um und bleibt stehen, ohne Lauftext. Passt er in eine Zeile, steht der Interpret darunter |
+| Überblenden | an | neues Lied wird erst dunkel, dann hell |
+| Aufbau | original | `original` ist Titel oben und Interpret darunter, wie im Mac-Skript. `ruhig`, `beide`, `gross` und `breit` bleiben als weitere Aufbauten |
+| Text | wechsel | nur beim Aufbau `ruhig` |
+| Pegel | aus | drei Balken unten auf dem Cover, direkt auf dem Bild, ohne dunkle Fläche dahinter |
+| Zeit | aus | Restzeit oder schon gespielte Zeit, nur bei `ruhig` und `breit`, wenn daneben Platz ist |
+| Lauftext | original | der Titel läuft einmal durch, der Interpret folgt der Einstellung der Uhr. `stehen`, `einmal`, `hinher` und `dauernd` bleiben wählbar. Bei „Titel auf zwei Zeilen“ ohne Wirkung |
+| Stillstehen | 1800 ms | nur für `einmal` und `hinher` |
+| Tempo | 90 % | wie im Original. 100 % ist die normale Geschwindigkeit der Uhr |
+| Wechsel alle | 8 s | nur beim Aufbau `ruhig` |
+| Titelfarbe / Interpretfarbe / Balkenfarbe / Pegelfarbe | weiß / amber / weiß / grün | die ersten drei wie im Original |
+
+Ein neues `itunes.ax` ersetzt die App auf der Uhr nicht von allein. Unter **Skripte** die Datei erneut importieren. PC-Adresse und Port bleiben, wenn die App denselben Namen behält. Danach einmal speichern.
 
 ## Ablauf
 
