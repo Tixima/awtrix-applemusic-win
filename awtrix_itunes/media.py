@@ -58,16 +58,23 @@ def clean_meta(title: object, artist: object, album: object, album_artist: objec
     album_text = text(album)
     album_artist_text = text(album_artist)
     if not artist_text and album_artist_text:
-        artist_text = artist_from_album_artist(album_artist_text, album_text)
+        artist_text = artist_from_album_artist(album_artist_text, album_text, title_text)
     return title_text, artist_text, album_text
 
 
-def artist_from_album_artist(album_artist: str, album: str) -> str:
-    if album and " - " in album_artist:
-        head, _, tail = album_artist.rpartition(" - ")
-        if tail == album and head.strip():
-            return head.strip()
-    return album_artist
+def artist_from_album_artist(album_artist: str, album: str, title: str = "") -> str:
+    """Trennt „Interpret - Album“ und schneidet ein angehängtes „Single“ ab."""
+    text = album_artist.strip()
+    for suffix in (" - Single", " - EP", " - Album"):
+        if text.endswith(suffix):
+            text = text[: -len(suffix)].rstrip()
+    if " - " in text:
+        head, _, tail = text.rpartition(" - ")
+        head = head.strip()
+        tail = tail.strip()
+        if head and tail and tail in {album, title}:
+            return head
+    return text
 
 
 def is_apple_session(aumid: str) -> bool:

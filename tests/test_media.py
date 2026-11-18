@@ -36,6 +36,9 @@ def test_interpret_aus_albumartist():
     assert clean_meta("Song", "", "", "Nur Band") == ("Song", "Nur Band", "")
     assert clean_meta("Song", "", "Anderes", "Famy - Ava")[1] == "Famy - Ava"
     assert artist_from_album_artist("A - B - C", "C") == "A - B"
+    assert clean_meta(
+        "Upside Down", "", "", "Black Gryph0n & Baasik - Upside Down - Single"
+    ) == ("Upside Down", "Black Gryph0n & Baasik", "")
     assert clean_meta("  T ", None, " Al ") == ("T", "", "Al")
 
 

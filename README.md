@@ -99,11 +99,18 @@ an die gewünschte Stelle gezogen wird. Solange die Adresse fehlt, zeigt die Uhr
 | Schlüssel | leer | derselbe Wert wie `--key` |
 | Intervall | 3 s | wie oft die Uhr nachfragt |
 | Bei Pause | ausblenden | `anzeigen` lässt die App stehen, grau |
-| Albumcover | an | aus nutzt die ganze Breite für den Text |
+| Aufbau | ruhig | `ruhig` zeigt Cover und eine Zeile. `beide` zeigt Titel und Interpret, aber nur eine Zeile darf wandern. `gross` schreibt den Titel groß. `breit` nutzt die ganze Breite, ohne Cover |
+| Text | wechsel | nur bei `ruhig`: Titel, Interpret, oder sie lösen sich ab |
+| Albumcover | an | aus gibt dem Text die ganze Breite |
+| Pegel | an | drei kleine Balken unten auf dem Cover, solange etwas spielt |
 | Fortschritt | an | Balken in der unteren Zeile |
+| Zeit | rest | `rest` ist die verbleibende Zeit, `lauf` die schon gespielte. Sie erscheint nur, wenn der Titel daneben noch Platz hat |
 | Neue Titel sofort | aus | springt zur App, wenn ein anderer Titel beginnt |
-| Titelfarbe / Interpretfarbe / Balkenfarbe | weiß / amber / weiß | |
-| Lauftext | 90 % | 100 % ist die normale Geschwindigkeit der Uhr |
+| Lauftext | einmal | `stehen` schneidet ab. `einmal` läuft zu langen Text ein Mal und bleibt dann stehen. `hinher` wandert hin und her. `dauernd` läuft, solange der Text nicht passt. Nie zwei Zeilen gleichzeitig |
+| Stillstehen | 1800 ms | Ruhe, bevor ein zu langer Text losläuft |
+| Tempo | 55 % | 100 % ist die normale Geschwindigkeit der Uhr |
+| Wechsel alle | 8 s | Abstand, in dem Titel und Interpret sich bei `wechsel` ablösen |
+| Titelfarbe / Interpretfarbe / Balkenfarbe / Pegelfarbe | weiß / amber / weiß / grün | |
 
 ## Ablauf
 
