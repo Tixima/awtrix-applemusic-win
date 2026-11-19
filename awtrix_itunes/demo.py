@@ -1,4 +1,4 @@
-"""Festes Beispiel, damit die Uhr ohne Apple Music geprüft werden kann."""
+"""Festes Beispiel, damit die Uhr ohne Player geprüft werden kann."""
 
 from __future__ import annotations
 

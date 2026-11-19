@@ -55,7 +55,7 @@ def build_task_xml(*, executable: str, script: str, config: str, workdir: str, u
     task = ET.Element("Task", {"version": "1.2", "xmlns": TASK_XMLNS})
     info = ET.SubElement(task, "RegistrationInfo")
     ET.SubElement(info, "Description").text = (
-        "Zeigt den Titel aus Apple Music oder iTunes auf einer AWTRIX-Uhr."
+        "Zeigt den Titel aus Apple Music, iTunes oder Spotify auf einer AWTRIX-Uhr."
     )
     triggers = ET.SubElement(task, "Triggers")
     trigger = ET.SubElement(triggers, "LogonTrigger")

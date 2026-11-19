@@ -13,6 +13,8 @@ from awtrix_itunes.media import (
     choose_session,
     clean_meta,
     is_apple_session,
+    is_music_session,
+    is_spotify_session,
     itunes_player_state,
     prefer,
     state_from_status,
@@ -64,10 +66,24 @@ def test_status_und_itunes_com():
     assert itunes_player_state(0) == STOPPED
 
 
-def test_waehlt_spielende_apple_sitzung():
+def test_spotify_sitzungen():
+    assert is_spotify_session("Spotify.exe")
+    assert is_spotify_session(r"C:\Users\nikla\AppData\Roaming\Spotify\Spotify.exe")
+    assert is_spotify_session("SpotifyAB.SpotifyMusic_zpdnekdrzrea0!Spotify")
+    assert not is_spotify_session("AppleMusic.exe")
+    assert not is_spotify_session("Microsoft.ZuneMusic_8wekyb3d8bbwe!Microsoft.ZuneMusic")
+    assert not is_spotify_session("")
+    assert is_music_session("Spotify.exe")
+    assert is_music_session("iTunes.exe")
+    assert not is_music_session("AppleInc.AppleTVWin_nzyj5cx40ttqa!App")
+
+
+def test_waehlt_die_spielende_sitzung():
     rows = [("Spotify.exe", PLAYING), ("AppleMusic.exe", PAUSED), ("iTunes.exe", PLAYING)]
-    assert choose_session(rows) == 2
-    assert choose_session([("Spotify.exe", PLAYING)]) is None
+    assert choose_session(rows) == 0
+    assert choose_session([("Spotify.exe", PAUSED), ("AppleMusic.exe", PLAYING)]) == 1
+    assert choose_session([("Spotify.exe", PLAYING)]) == 0
+    assert choose_session([("Microsoft.ZuneMusic_8wekyb3d8bbwe!Microsoft.ZuneMusic", PLAYING)]) is None
     assert choose_session([("AppleMusic.exe", STOPPED)]) == 0
 
 

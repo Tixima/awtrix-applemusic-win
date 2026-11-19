@@ -1,7 +1,7 @@
 # @name    Apple Music
-# @desc    Wie das Original: Cover, Titel, Interpret, Fortschritt. Optional bricht der Titel an Wörtern auf beide Zeilen um. Ein neues Lied blendet über. itunes-helper.py muss laufen.
+# @desc    Wie das Original: Cover, Titel, Interpret, Fortschritt. Apple Music, iTunes oder Spotify. Optional bricht der Titel an Wörtern auf beide Zeilen um. Ein neues Lied blendet über. itunes-helper.py muss laufen.
 # @author  Jeff Rainey, Niktix
-# @version 2.4
+# @version 2.5
 # @display 52x16
 # @config  host     text   "PC-Adresse"        default="" group="Verbindung" help="IP oder Name des Windows-PCs, auf dem der Helper läuft"
 # @config  port     number "Port"              default=8765 min=1 max=65535 group="Verbindung"

@@ -30,4 +30,4 @@ def test_original_und_die_zusaetzlichen_optionen():
     assert '"Adresse"' in source
     assert '"kein PC"' in source
     assert "rect_fill(0, 10, 8, 6" not in source
-    assert "@version 2.4" in source
+    assert "@version 2.5" in source

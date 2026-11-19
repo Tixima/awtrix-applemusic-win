@@ -43,7 +43,7 @@ def main(argv: list[str] | None = None) -> None:
         server = make_server(player, key, port)
     except OSError as exc:
         raise SystemExit(f"Port {port} ist belegt oder gesperrt: {exc}") from exc
-    log.info("Apple-Music-Helper %s auf Port %s%s", __version__, port, " (Schlüssel nötig)" if key else "")
+    log.info("Musik-Helper %s auf Port %s%s", __version__, port, " (Schlüssel nötig)" if key else "")
     addresses = local_addresses()
     if addresses:
         log.info("Für die Uhr: %s", ", ".join(addresses))
@@ -59,14 +59,14 @@ def main(argv: list[str] | None = None) -> None:
 
 def parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Zeigt Apple Music oder iTunes einer AWTRIX-Uhr im lokalen Netz."
+        description="Zeigt Apple Music, iTunes oder Spotify einer AWTRIX-Uhr im lokalen Netz."
     )
     parser.add_argument("--port", type=int, default=None)
     parser.add_argument("--key", default=None, help="optional, derselbe Wert wie „Schlüssel“ auf der Uhr")
     parser.add_argument("--config", default="", help=argparse.SUPPRESS)
     parser.add_argument("--install", action="store_true", help="bei jeder Windows-Anmeldung starten")
     parser.add_argument("--uninstall", action="store_true", help="Autostart entfernen")
-    parser.add_argument("--demo", action="store_true", help="festes Beispiel, ohne Apple Music")
+    parser.add_argument("--demo", action="store_true", help="festes Beispiel, ohne Player")
     return parser.parse_args(argv)
 
 
@@ -96,11 +96,11 @@ def check_key(key: str) -> None:
 
 def build_source(demo: bool):
     if demo:
-        log.info("Demo: festes Beispiel, Apple Music wird nicht gelesen.")
+        log.info("Demo: festes Beispiel, es wird kein Player gelesen.")
         return DemoSource()
     if sys.platform != "win32":
         raise SystemExit(
-            "Dieser Helper liest Apple Music über die Windows-Mediensteuerung. "
+            "Dieser Helper liest Apple Music, iTunes und Spotify über die Windows-Mediensteuerung. "
             "Zum Ausprobieren ohne Windows: python itunes-helper.py --demo"
         )
     from awtrix_itunes.windows_media import WindowsMediaSource

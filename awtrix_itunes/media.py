@@ -77,17 +77,38 @@ def artist_from_album_artist(album_artist: str, album: str, title: str = "") -> 
     return text
 
 
+def _session_name(aumid: str) -> tuple[str, str]:
+    normalized = aumid.strip().lower().replace("\\", "/")
+    return normalized, normalized.split("/")[-1]
+
+
 def is_apple_session(aumid: str) -> bool:
     """Erkennt Apple Music (Windows 10 und 11) und das klassische iTunes."""
     if not aumid:
         return False
-    normalized = aumid.strip().lower().replace("\\", "/")
-    base = normalized.split("/")[-1]
+    normalized, base = _session_name(aumid)
     if base in {"applemusic.exe", "itunes.exe", "itunes"}:
         return True
     if "applemusic" in normalized:
         return True
     return "!itunes" in normalized
+
+
+def is_spotify_session(aumid: str) -> bool:
+    """Erkennt die Desktop-App und Spotify aus dem Microsoft Store."""
+    if not aumid:
+        return False
+    normalized, base = _session_name(aumid)
+    if base in {"spotify.exe", "spotify"}:
+        return True
+    if "spotifyab.spotifymusic" in normalized:
+        return True
+    return normalized.endswith("!spotify")
+
+
+def is_music_session(aumid: str) -> bool:
+    """Apple Music, iTunes oder Spotify. Andere Player bleiben außen vor."""
+    return is_apple_session(aumid) or is_spotify_session(aumid)
 
 
 def state_from_status(status: object) -> str:
@@ -111,15 +132,18 @@ def itunes_player_state(player_state: int) -> str:
 
 
 def choose_session(rows: list[tuple[str, str]]) -> int | None:
-    """Wählt die Apple-Sitzung, die gerade spielt, sonst die in Pause."""
-    apple = [(index, state) for index, (aumid, state) in enumerate(rows) if is_apple_session(aumid)]
-    if not apple:
+    """Wählt die passende Sitzung, die gerade spielt, sonst die in Pause.
+
+    Spielen zwei Apps zugleich, gewinnt die, die Windows zuerst meldet.
+    """
+    matched = [(index, state) for index, (aumid, state) in enumerate(rows) if is_music_session(aumid)]
+    if not matched:
         return None
     for wanted in ACTIVE:
-        for index, state in apple:
+        for index, state in matched:
             if state == wanted:
                 return index
-    return apple[0][0]
+    return matched[0][0]
 
 
 def timeline_seconds(

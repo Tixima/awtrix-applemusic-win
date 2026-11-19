@@ -1,4 +1,4 @@
-"""Wählt aus den Medien-Sitzungen die von Apple Music oder iTunes."""
+"""Wählt aus den Medien-Sitzungen Apple Music, iTunes oder Spotify."""
 
 from __future__ import annotations
 
@@ -38,7 +38,7 @@ async def collect_snapshot(sessions, read_thumb, now: datetime) -> SmtcResult:
     index = choose_session(rows)
     if index is None:
         names = ", ".join(aumid for _, aumid, _ in readable) or "keine"
-        return SmtcResult(None, f"Keine Apple-Music-Sitzung. Sichtbar: {names}")
+        return SmtcResult(None, f"Keine passende Sitzung. Sichtbar: {names}")
 
     session, aumid, state = readable[index]
     title, artist, album, artwork = await _metadata(session, read_thumb)

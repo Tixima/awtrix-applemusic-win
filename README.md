@@ -1,12 +1,12 @@
-# AWTRIX Apple Music für Windows
+# AWTRIX Musik für Windows
 
-Zeigt den Titel, der in **Apple Music** oder **iTunes** auf einem Windows-PC läuft, auf einer
+Zeigt den Titel, der in **Apple Music**, **iTunes** oder **Spotify** auf einem Windows-PC läuft, auf einer
 [AWTRIX-NG](https://github.com/Blueforcer/awtrix-ng)-Uhr: das Cover links, Titel und Interpret
 als Lauftext, darunter der Fortschritt. Gebaut für die Ulanzi TC002 (52×16).
 
 Das ist der Windows-Port von [mojeska/awtrix-itunes](https://github.com/mojeska/awtrix-itunes)
 von Jeff Rainey. Das Original fragt die Musik-App auf dem Mac per AppleScript. Unter Windows
-gibt es das nicht. Apple Music und iTunes melden den laufenden Titel an die
+gibt es das nicht. Die drei Player melden den laufenden Titel an die
 Windows-Mediensteuerung, und dieser Helper liest genau dort. Die Uhr bekommt dieselben
 Antworten wie beim Mac-Helper: `GET /now` und `GET /art/<id>.png`.
 
@@ -25,14 +25,14 @@ git clone https://github.com/Tixima/awtrix-applemusic-win.git
 cd awtrix-applemusic-win
 ```
 3. In dem Ordner **install.bat** doppelklicken. Das Fenster offen lassen, bis „Eingerichtet“ erscheint. Die angezeigte Adresse merken, zum Beispiel `192.168.1.20`. Wenn Windows nach der Firewall fragt: Zugriff zulassen.
-4. In Apple Music oder iTunes einen Titel starten. Im Browser `http://localhost:8765/now` öffnen. Dort muss `"playing"` stehen.
+4. In Apple Music, iTunes oder Spotify einen Titel starten. Im Browser `http://localhost:8765/now` öffnen. Dort muss `"playing"` stehen.
 5. Auf der Uhr **Skripte**, dann **Importieren**, die Datei `itunes.ax` wählen. Unter **Apps** beim Zahnrad von **Apple Music** die Adresse aus Schritt 3 eintragen und die App in die Rotation ziehen.
 
 ## Was du brauchst
 
 - eine AWTRIX-NG-Uhr mit 52×16 (Ulanzi TC002), im selben Netz wie der PC
 - Windows 10 oder 11
-- Apple Music aus dem Microsoft Store, oder das klassische iTunes
+- Apple Music aus dem Microsoft Store, das klassische iTunes, oder die Spotify-App für Windows
 - Python 3.10 oder neuer von [python.org](https://www.python.org/downloads/). Bei der
   Installation „Add python.exe to PATH“ ankreuzen.
 
@@ -64,7 +64,7 @@ zum Cover. `start.bat` macht dasselbe wie der Aufruf oben und lässt das Fenster
 |---|---|---|
 | `--port` | `8765` | Port, den die Uhr anspricht |
 | `--key GEHEIM` | keiner | derselbe Text wie **Schlüssel** auf der Uhr |
-| `--demo` | aus | festes Beispiel, damit die Uhr ohne Apple Music geprüft werden kann |
+| `--demo` | aus | festes Beispiel, damit die Uhr ohne Player geprüft werden kann |
 
 Die Adresse für die Uhr steht beim Start im Fenster (eine IPv4-Adresse, nicht
 `127.0.0.1`). Sonst in der Eingabeaufforderung `ipconfig` und die Zeile „IPv4-Adresse“
@@ -72,8 +72,8 @@ der WLAN-Karte nehmen. Eine feste Adresse im Router (DHCP-Reservierung) erspart 
 das Nachtragen.
 
 Beim ersten Start fragt die Windows-Firewall. Für private Netze den Zugriff zulassen.
-Der Helper startet Apple Music und iTunes nicht. Er liest nur mit und kann die
-Wiedergabe nicht steuern.
+Der Helper startet Apple Music, iTunes und Spotify nicht. Er liest nur mit und kann die
+Wiedergabe nicht steuern. Spielen zwei Apps zugleich, nimmt er die, die Windows zuerst als spielend meldet.
 
 ## 2. Skript auf die Uhr
 
@@ -121,7 +121,7 @@ Ein neues `itunes.ax` ersetzt die App auf der Uhr nicht von allein. Unter **Skri
 
 ```mermaid
 flowchart LR
-  A["Apple Music oder iTunes"] -- "Windows-Mediensteuerung, höchstens einmal pro Sekunde" --> H["itunes-helper.py"]
+  A["Apple Music, iTunes oder Spotify"] -- "Windows-Mediensteuerung, höchstens einmal pro Sekunde" --> H["itunes-helper.py"]
   C["itunes.ax auf der Uhr"] -- "GET /now alle paar Sekunden" --> H
   C -- "GET /art/ID.png, einmal pro Album" --> H
   H -. "kein Cover in der Mediensteuerung" .-> S["iTunes-Suche"]
@@ -152,7 +152,7 @@ in die Adresse setzt.
 |---|---|
 | Die App kommt nie | Läuft ein Titel? `http://<pc-ip>:8765/now` von einem anderen Gerät muss `"playing"` sagen. Liegt die App in der Rotation? |
 | Auf dem PC geht die Seite, von der Uhr nicht | Firewall: beim ersten Start den Zugriff zugelassen? Sonst die Eingabeaufforderung als Administrator und `netsh advfirewall firewall add rule name="AWTRIX Apple Music" dir=in action=allow protocol=TCP localport=8765` |
-| `/now` sagt immer `"off"` | Zeigt die Lautstärke-Ansicht von Windows den Titel? Wenn nicht, sieht auch der Helper ihn nicht. Apple Music muss laufen und etwas abspielen. Im Protokoll `helper.log` steht, welche Sitzungen Windows meldet. |
+| `/now` sagt immer `"off"` | Zeigt die Lautstärke-Ansicht von Windows den Titel? Wenn nicht, sieht auch der Helper ihn nicht. Apple Music, iTunes oder Spotify muss laufen und etwas abspielen. Im Protokoll `helper.log` steht, welche Sitzungen Windows meldet. |
 | Note und „Adresse / fehlt“ | PC-Adresse in den Einstellungen der App eintragen |
 | Note und „Offline / kein PC“ | Der Helper auf dem PC läuft nicht, oder die Adresse stimmt nicht. Im Browser `http://<pc-ip>:8765/now` öffnen |
 | „Datei nicht gefunden“ und danach „Zugriff verweigert“ | Die ersten beiden Zeilen heißen nur: die Aufgabe gab es noch nicht. „Zugriff verweigert“ heißt, Windows will den Eintrag nicht ohne Administrator. Rechtsklick auf `install.bat`, **Als Administrator ausführen**. Danach muss „Eingerichtet“ stehen. |

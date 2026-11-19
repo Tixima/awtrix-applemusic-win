@@ -34,7 +34,7 @@ def _timeline(position=10):
     )
 
 
-def test_apple_music_gewinnt_gegen_spotify_und_liest_das_cover():
+def test_spotify_wird_gelesen_und_holt_das_cover():
     props = SimpleNamespace(
         title="Song",
         artist="",
@@ -59,19 +59,19 @@ def test_apple_music_gewinnt_gegen_spotify_und_liest_das_cover():
     assert result.snapshot.position == 12.0
     assert result.snapshot.artwork == b"jpeg"
     assert seen == ["ref"]
-    assert "AppleInc.AppleMusicWin_nzyj5cx40ttqa!App" in result.detail
+    assert "Spotify.exe" in result.detail
     assert "spielt" in result.detail
 
 
 def test_fremde_sitzung_wird_benannt():
-    other = Session("Spotify.exe", 4, None, _timeline())
+    other = Session("Microsoft.ZuneMusic_8wekyb3d8bbwe!Microsoft.ZuneMusic", 4, None, _timeline())
 
     async def thumb(ref):
         raise AssertionError(ref)
 
     result = asyncio.run(collect_snapshot([other], thumb, datetime(2026, 1, 1, tzinfo=timezone.utc)))
     assert result.snapshot is None
-    assert "Spotify.exe" in result.detail
+    assert "ZuneMusic" in result.detail
 
 
 def test_pause_rechnet_die_zeit_nicht_weiter():
